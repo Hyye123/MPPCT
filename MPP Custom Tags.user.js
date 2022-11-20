@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.0.5
+// @version      1.0.6
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -16,7 +16,7 @@ console.log('Loaded MPPCT.')
 if (!localStorage.tag) {
     localStorage.tag = JSON.stringify({text: "USER", color: "#000000"});
 }
-const ver = '1.0.5';
+const ver = '1.0.6';
 var tag = JSON.parse(localStorage.tag);
 
 MPP.client.on('hi', () => {
@@ -33,7 +33,7 @@ function sendTag() {
     bufferlocked = true;
     setTimeout(function() {
         bufferlocked = false;
-    }, 2500)
+    }, 1000)
 }
 
 function hexToRGB(hex) {
