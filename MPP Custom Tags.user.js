@@ -57,7 +57,9 @@ MPP.client.on("custom", (data) => {
         }
     }
     if (data.data.m == 'mppctgt') {
-        sendTag();
+        if (MPP.client.ppl[data.p] != undefined) {
+            sendTag();
+        }
     }
 });
 MPP.client.on("p", (p) => {
