@@ -15,7 +15,7 @@ console.log('Loaded MPPCT.')
 if (!localStorage.tag) {
     localStorage.tag = JSON.stringify({text: "USER", color: "#000000"});
 }
-const ver = 1.0;
+const ver = '1.0';
 var tag = JSON.parse(localStorage.tag);
 
 MPP.client.on('hi', () => {
@@ -92,3 +92,19 @@ document.body.getElementsByClassName("dialog").rename.appendChild(e);
 
 $("#rename input[name=tag]").val(tag.text);
 $("#rename input[name=tagcolor]").val(tag.color);
+
+
+//Version check
+fetch('https://raw.githubusercontent.com/Hyye123/MPPCT/main/version.json').then(r => r.json().then(json => {
+    if (ver != JSON.parse(json).latest) MPP.chat.receive({
+        "m": "a",
+        "t": Date.now(),
+        "a": "Please update MPPCT via github(https://github.com/Hyye123/MPPCT) or greasy fork",
+        "p": {
+            "_id": "MPPCT",
+            "name": "MPPCT",
+            "color": "#ffffff",
+            "id": "MPPCT"
+        }
+    });
+}));
