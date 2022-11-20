@@ -38,10 +38,14 @@ function hexToRGB(hex) {
 }
 
 MPP.client.on("custom", (data) => {
-    if (data.data.m != 'mppct') return;
-    if (data.data.tag && data.data.color) {
-        document.getElementById(`namediv-${data.p}`).innerHTML = `<div class="nametag" id="nametag-${data.p}" style="background-color: rgb(${hexToRGB(data.data.color)});">${data.data.tag}</div><div class="nametext" id="nametext-${data.p}">${MPP.client.findParticipantById(data.p).name}</div>`;
-        document.getElementById(`namediv-${data.p}`).title = "This is a MPPCT user."
+    if (data.data.m == 'mppct') {
+        if (data.data.tag && data.data.color) {
+            document.getElementById(`namediv-${data.p}`).innerHTML = `<div class="nametag" id="nametag-${data.p}" style="background-color: rgb(${hexToRGB(data.data.color)});">${data.data.tag}</div><div class="nametext" id="nametext-${data.p}">${MPP.client.findParticipantById(data.p).name}</div>`;
+            document.getElementById(`namediv-${data.p}`).title = "This is a MPPCT user."
+        }
+    }
+    if (data.data.m == 'mppctgt') {
+        MPP.client.sendArray([{m: "custom", data: {m: 'mppct', tag: tag.text, color: tag.color}, target: { mode: 'subscribed', global: false } }]);
     }
 });
 MPP.client.on("p", (p) => {
@@ -56,6 +60,7 @@ MPP.client.on("participant added", (p) => {
         document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).innerHTML = `<div class="nametag" id="nametag-${MPP.client.getOwnParticipant()._id}" style="background-color: rgb(${hexToRGB(tag.color)});">${tag.text}</div><div class="nametext" id="nametext-${MPP.client.getOwnParticipant()._id}">${MPP.client.getOwnParticipant().name}</div>`;
         document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).title = "This is a MPPCT user.";
     }
+    MPP.client.sendArray([{m: "custom", data: {m: 'mppctgt'}, target: { mode: 'subscribed', global: false } }]);
     MPP.client.sendArray([{m: "custom", data: {m: 'mppct', tag: tag.text, color: tag.color}, target: { mode: 'subscribed', global: false } }]);
 });
 
@@ -99,7 +104,7 @@ fetch('https://raw.githubusercontent.com/Hyye123/MPPCT/main/version.json').then(
     if (ver != JSON.parse(json).latest) MPP.chat.receive({
         "m": "a",
         "t": Date.now(),
-        "a": "Please update MPPCT via github(https://github.com/Hyye123/MPPCT) or greasy fork",
+        "a": "Please update MPPCT via github(https://github.com/Hyye123/MPPCT) or greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags)",
         "p": {
             "_id": "MPPCT",
             "name": "MPPCT",
