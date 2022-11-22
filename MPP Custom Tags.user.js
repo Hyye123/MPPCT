@@ -57,7 +57,6 @@ function hexToRGB(hex) {
 }
 
 MPP.client.on("custom", (data) => {
-    console.log(data);
     if (data.data.m == 'mppct') {
         if (data.data.tag && data.data.color) {
             if (document.getElementById(`namediv-${data.p}`) != null) {
