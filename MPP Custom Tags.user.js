@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.0.8
+// @version      1.0.9
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -16,7 +16,7 @@ console.log('Loaded MPPCT.')
 if (!localStorage.tag) {
     localStorage.tag = JSON.stringify({text: "None", color: "#000000"});
 }
-const ver = '1.0.8';
+const ver = '1.0.9';
 var tag = JSON.parse(localStorage.tag);
 
 MPP.client.on('hi', () => {
@@ -26,14 +26,23 @@ MPP.client.on('hi', () => {
     }
 });
 
-var bufferlocked = false;
+var sendTagLocked = false;
 function sendTag() {
-    if (bufferlocked) return;
+    if (sendTagLocked) return;
     MPP.client.sendArray([{m: "custom", data: {m: 'mppct', tag: tag.text, color: tag.color}, target: { mode: 'subscribed' } }])
-    bufferlocked = true;
+    sendTagLocked = true;
     setTimeout(function() {
-        bufferlocked = false;
-    }, 500)
+        sendTagLocked = false;
+    }, 750)
+}
+var sendTagsLocked = false;
+function sendTags() {
+    if (sendTagsLocked) return;
+    MPP.client.sendArray([{m: "custom", data: {m: 'mppctgt'}, target: { mode: 'subscribed' } }]);
+    sendTagsLocked = true;
+    setTimeout(function() {
+        sendTagsLocked = false;
+    }, 1500)
 }
 
 function hexToRGB(hex) {
@@ -48,6 +57,7 @@ function hexToRGB(hex) {
 }
 
 MPP.client.on("custom", (data) => {
+    console.log(data);
     if (data.data.m == 'mppct') {
         if (data.data.tag && data.data.color) {
             if (document.getElementById(`namediv-${data.p}`) != null) {
@@ -74,7 +84,7 @@ MPP.client.on("participant added", (p) => {
         document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).innerHTML = `<div class="nametag" id="nametag-${MPP.client.getOwnParticipant()._id}" style="background-color: rgb(${hexToRGB(tag.color)});">${tag.text}</div><div class="nametext" id="nametext-${MPP.client.getOwnParticipant()._id}">${MPP.client.getOwnParticipant().name}</div>`;
         document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).title = "This is a MPPCT user.";
     }
-    MPP.client.sendArray([{m: "custom", data: {m: 'mppctgt'}, target: { mode: 'subscribed' } }]);
+    sendTags();
 });
 
 
@@ -120,7 +130,7 @@ fetch('https://raw.githubusercontent.com/Hyye123/MPPCT/main/version.json').then(
             MPP.chat.receive({
                 "m": "a",
                 "t": Date.now(),
-                "a": "Please update MPPCT via greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags) or github(https://github.com/Hyye123/MPPCT) or ",
+                "a": "Please update MPPCT via greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags) or github(https://github.com/Hyye123/MPPCT)",
                 "p": {
                     "_id": "MPPCT",
                     "name": "MPPCT",
