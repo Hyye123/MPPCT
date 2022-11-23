@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.0.9
+// @version      1.1
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -16,7 +16,7 @@ console.log('Loaded MPPCT.')
 if (!localStorage.tag) {
     localStorage.tag = JSON.stringify({text: "None", color: "#000000"});
 }
-const ver = '1.0.9';
+const ver = '1.1';
 var tag = JSON.parse(localStorage.tag);
 
 MPP.client.on('hi', () => {
@@ -24,7 +24,21 @@ MPP.client.on('hi', () => {
         MPP.client.sendArray([{m:"+custom"}]);
         MPP.client.customSubscribed = true;
     }
+    setTimeout(function() {
+        updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id);
+    }, 1500);
 });
+
+function updtag(text, color, _id) {
+    if (document.getElementById(`nametag-${_id}`) != null) document.getElementById(`nametag-${_id}`).remove();
+    var tagDiv = document.createElement("div")
+    tagDiv.className = "nametag";
+    tagDiv.id = `nametag-${_id}`;
+    tagDiv.style = `background-color:${color};`;
+    tagDiv.innerText = text;
+    document.getElementById(`namediv-${_id}`).prepend(tagDiv);
+    document.getElementById(`namediv-${_id}`).title = "This is a MPPCT user.";
+}
 
 var sendTagLocked = false;
 function sendTag() {
@@ -35,14 +49,8 @@ function sendTag() {
         sendTagLocked = false;
     }, 750)
 }
-var sendTagsLocked = false;
-function sendTags() {
-    if (sendTagsLocked) return;
+function askForTags() {
     MPP.client.sendArray([{m: "custom", data: {m: 'mppctgt'}, target: { mode: 'subscribed' } }]);
-    sendTagsLocked = true;
-    setTimeout(function() {
-        sendTagsLocked = false;
-    }, 1500)
 }
 
 function hexToRGB(hex) {
@@ -60,30 +68,26 @@ MPP.client.on("custom", (data) => {
     if (data.data.m == 'mppct') {
         if (data.data.tag && data.data.color) {
             if (document.getElementById(`namediv-${data.p}`) != null) {
-                document.getElementById(`namediv-${data.p}`).innerHTML = `<div class="nametag" id="nametag-${data.p}" style="background-color: rgb(${hexToRGB(data.data.color)});">${data.data.tag}</div><div class="nametext" id="nametext-${data.p}">${MPP.client.findParticipantById(data.p).name}</div>`;
-                document.getElementById(`namediv-${data.p}`).title = "This is a MPPCT user.";
+                updtag(data.data.tag, data.data.color, data.p);
             }
         }
     }
     if (data.data.m == 'mppctgt') {
-        if (document.getElementById(`namediv-${data.p}`) != null) {
+        if (MPP.client.ppl[data.p] != undefined) {
             sendTag();
         }
     }
 });
 MPP.client.on("p", (p) => {
     if (p._id == MPP.client.getOwnParticipant()._id) {
-        document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).innerHTML = `<div class="nametag" id="nametag-${MPP.client.getOwnParticipant()._id}" style="background-color: rgb(${hexToRGB(tag.color)});">${tag.text}</div><div class="nametext" id="nametext-${MPP.client.getOwnParticipant()._id}">${MPP.client.getOwnParticipant().name}</div>`;
-        document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).title = "This is a MPPCT user.";
+        updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id);
     }
     sendTag();
 });
-MPP.client.on("participant added", (p) => {
-    if (p._id == MPP.client.getOwnParticipant()._id) {
-        document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).innerHTML = `<div class="nametag" id="nametag-${MPP.client.getOwnParticipant()._id}" style="background-color: rgb(${hexToRGB(tag.color)});">${tag.text}</div><div class="nametext" id="nametext-${MPP.client.getOwnParticipant()._id}">${MPP.client.getOwnParticipant().name}</div>`;
-        document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).title = "This is a MPPCT user.";
-    }
-    sendTags();
+MPP.client.on("ch", (p) => {
+    setTimeout(function() {
+        askForTags();
+    }, 1250);
 });
 
 
@@ -109,8 +113,7 @@ const e = document.createElement("button");
 e.addEventListener("click", () => {
     localStorage.tag = JSON.stringify({text: $("#rename input[name=tag]").val(), color: $("#rename input[name=tagcolor]").val()});
     tag = JSON.parse(localStorage.tag);
-    document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).innerHTML = `<div class="nametag" id="nametag-${MPP.client.getOwnParticipant()._id}" style="background-color: rgb(${hexToRGB(tag.color)});">${tag.text}</div><div class="nametext" id="nametext-${MPP.client.getOwnParticipant()._id}">${MPP.client.getOwnParticipant().name}</div>`;
-    document.getElementById(`namediv-${MPP.client.getOwnParticipant()._id}`).title = "This is a MPPCT user."
+    updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id);
     sendTag()
 });
 e.innerText = "SET TAG";
