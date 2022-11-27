@@ -5,6 +5,7 @@ client.on('hi', () => {
         client.sendArray([{m:"+custom"}]);
         client.customSubscribed = true;
     }
+    sendTag();
 });
 
 var sendTagLocked = false;
@@ -15,9 +16,6 @@ function sendTag() {
     setTimeout(function() {
         sendTagLocked = false;
     }, 750)
-}
-function askForTags() {
-    client.sendArray([{m: "custom", data: {m: 'mppctgt'}, target: { mode: 'subscribed' } }]);
 }
 
 client.on("custom", (data) => {
@@ -31,7 +29,5 @@ client.on("p", (p) => {
     sendTag();
 });
 client.on("ch", (p) => {
-    setTimeout(function() {
-        askForTags();
-    }, 1250);
+    sendTag();
 });
