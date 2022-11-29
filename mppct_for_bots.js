@@ -11,7 +11,7 @@ client.on('hi', () => {
 var sendTagLocked = false;
 function sendTag() {
     if (sendTagLocked) return;
-    client.sendArray([{m: "custom", data: {m: 'mppct', tag: tag.text, color: tag.color}, target: { mode: 'subscribed' } }])
+    client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color}, target: { mode: 'subscribed' } }])
     sendTagLocked = true;
     setTimeout(function() {
         sendTagLocked = false;
@@ -26,7 +26,9 @@ client.on("custom", (data) => {
     }
 });
 client.on("p", (p) => {
-    sendTag();
+    if (p._id == MPP.client.getOwnParticipant()._id) {
+        sendTag();
+    }
 });
 client.on("ch", (p) => {
     sendTag();
