@@ -26,7 +26,7 @@ client.on("custom", (data) => {
     }
 });
 client.on("p", (p) => {
-    if (p._id == MPP.client.getOwnParticipant()._id) {
+    if (p._id == client.getOwnParticipant()._id) {
         sendTag();
     }
 });
