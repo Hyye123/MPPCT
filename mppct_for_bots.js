@@ -19,9 +19,9 @@ function sendTag() {
 }
 
 client.on("custom", (data) => {
-    if (data.data.m == 'mppctgt') {
+    if (data.data.m == 'mppctreq') {
         if (client.ppl[data.p] != undefined) {
-            sendTag();
+            client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color}, target: { mode: 'id', id: data.p } }]);
         }
     }
 });
