@@ -131,31 +131,35 @@ $("#rename input[name=tagcolor]").val(tag.color);
 
 
 //Version checker ////////////////////////////////
-fetch('https://raw.githubusercontent.com/Hyye123/MPPCT/main/version.json').then(r => r.json().then(json => {
-    if (ver != json.latest) {
-        setInterval(function() {
-            MPP.chat.receive({
-                "m": "a",
-                "t": Date.now(),
-                "a": "Please update MPPCT via greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags) or github(https://github.com/Hyye123/MPPCT)",
-                "p": {
-                    "_id": "MPPCT",
-                    "name": "MPPCT (eng)",
-                    "color": "#ffffff",
-                    "id": "MPPCT"
-                }
-            });
-            MPP.chat.receive({
-                "m": "a",
-                "t": Date.now(),
-                "a": "Пожалуйста обновите MPPCT через greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags) или github(https://github.com/Hyye123/MPPCT)",
-                "p": {
-                    "_id": "MPPCT",
-                    "name": "MPPCT (ru)",
-                    "color": "#ffffff",
-                    "id": "MPPCT"
-                }
-            });
-        }, 30000);
-    }
-}));
+setInterval(function() {
+    fetch('https://raw.githubusercontent.com/Hyye123/MPPCT/main/version.json').then(r => r.json().then(json => {
+        if (ver != json.latest) {
+            setInterval(function() {
+                MPP.chat.receive({
+                    "m": "a",
+                    "t": Date.now(),
+                    "a": "Please update MPPCT via greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags) or github(https://github.com/Hyye123/MPPCT)",
+                    "p": {
+                        "_id": "MPPCT",
+                        "name": "MPPCT (eng)",
+                        "color": "#ffffff",
+                        "id": "MPPCT"
+                    }
+                });
+                MPP.chat.receive({
+                    "m": "a",
+                    "t": Date.now(),
+                    "a": "Пожалуйста обновите MPPCT через greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags) или github(https://github.com/Hyye123/MPPCT)",
+                    "p": {
+                        "_id": "MPPCT",
+                        "name": "MPPCT (ru)",
+                        "color": "#ffffff",
+                        "id": "MPPCT"
+                    }
+                });
+            }, 30000);
+        } else {
+            if (debug) console.log("Version of MPPCT checked. This version is the latest.");
+        }
+    }));
+}, 900000)
