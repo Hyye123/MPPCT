@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -16,7 +16,8 @@ console.log('Loaded MPPCT.')
 if (!localStorage.tag) {
     localStorage.tag = JSON.stringify({text: "None", color: "#000000"});
 }
-const ver = '1.1';
+const debug = true;
+const ver = '1.2';
 var tag = JSON.parse(localStorage.tag);
 
 MPP.client.on('hi', () => {
@@ -30,7 +31,10 @@ MPP.client.on('hi', () => {
 });
 
 function updtag(text, color, _id) {
-    if (document.getElementById(`nametag-${_id}`) != null) document.getElementById(`nametag-${_id}`).remove();
+    if (document.getElementById(`nametag-${_id}`) != null) {
+        document.getElementById(`nametag-${_id}`).remove();
+        if (debug) console.log("Updating Tag. _ID: " + _id);
+    } else if (debug) console.log("New tag. _ID: " + _id);
     var tagDiv = document.createElement("div")
     tagDiv.className = "nametag";
     tagDiv.id = `nametag-${_id}`;
@@ -42,15 +46,20 @@ function updtag(text, color, _id) {
 
 var sendTagLocked = false;
 function sendTag() {
-    if (sendTagLocked) return;
-    MPP.client.sendArray([{m: "custom", data: {m: 'mppct', tag: tag.text, color: tag.color}, target: { mode: 'subscribed' } }])
+    if (sendTagLocked) {
+        if (debug) return console.log("Called function sendTag(), but its locked");
+        else return;
+    };
+    MPP.client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color}, target: { mode: 'subscribed' } }]);
+    if (debug) console.log("Called function sendTag(), tag successfully sent");
     sendTagLocked = true;
     setTimeout(function() {
         sendTagLocked = false;
     }, 750)
 }
 function askForTags() {
-    MPP.client.sendArray([{m: "custom", data: {m: 'mppctgt'}, target: { mode: 'subscribed' } }]);
+    MPP.client.sendArray([{m: "custom", data: {m: 'mppctreq'}, target: { mode: 'subscribed' } }]);
+    if (debug) console.log("Called function askForTags()");
 }
 
 function hexToRGB(hex) {
@@ -66,27 +75,32 @@ function hexToRGB(hex) {
 
 MPP.client.on("custom", (data) => {
     if (data.data.m == 'mppct') {
-        if (data.data.tag && data.data.color) {
-            if (document.getElementById(`namediv-${data.p}`) != null) {
-                updtag(data.data.tag, data.data.color, data.p);
-            }
-        }
+        if (data.data.text && data.data.color) {
+            if (MPP.client.ppl[data.p]) {
+                updtag(data.data.text, data.data.color, data.p);
+                if (debug) console.log(`Received tag and its successfully confirmed. _ID: ${data.data.p}, text: ${data.data.text}, color: ${data.data.color}`);
+            } else if (debug) console.warn("Received tag, but its failed to confirm. Reason: not found _id in ppl");
+        } else if (debug) console.warn("Received tag, but its failed to confirm. Reason: missing data.text or data.color");
     }
-    if (data.data.m == 'mppctgt') {
+    if (data.data.m == 'mppctreq') {
         if (MPP.client.ppl[data.p] != undefined) {
             sendTag();
-        }
+            if (debug) console.log("Received tags request ad its succesfully confirmed. _ID: " + data.data.p);
+        } else if (debug) console.warn("Received tags request, but its failed to confirm. Reason: not found _id in ppl. Sender _ID: " + data.data.p);
     }
 });
 MPP.client.on("p", (p) => {
     if (p._id == MPP.client.getOwnParticipant()._id) {
         updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id);
+        if (debug) console.log("Got own player update, tag updated");
+        sendTag();
     }
-    sendTag();
 });
 MPP.client.on("ch", (p) => {
     setTimeout(function() {
         askForTags();
+        sendTag();
+        if (debug) console.log("Received ch event and sent tags request");
     }, 1250);
 });
 
@@ -115,6 +129,7 @@ e.addEventListener("click", () => {
     tag = JSON.parse(localStorage.tag);
     updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id);
     sendTag()
+    if (debug) console.log("Updated own tag");
 });
 e.innerText = "SET TAG";
 e.className = "submittag";
