@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.2.5
+// @version      1.3
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -16,13 +16,13 @@ console.log('Loaded MPPCT.')
 if (!localStorage.tag) {
     localStorage.tag = JSON.stringify({text: "Tag", color: "#000000"});
 }
-const debug = true;
-const ver = '1.2.5';
-var tag = JSON.parse(localStorage.tag);
+const debug = false;
+const ver = '1.3';
+let tag = JSON.parse(localStorage.tag);
 
 MPP.client.on('hi', () => {
+    MPP.client.sendArray([{m:"+custom"}]);
     if (!MPP.client.customSubscribed) {
-        MPP.client.sendArray([{m:"+custom"}]);
         MPP.client.customSubscribed = true;
     }
     setTimeout(function() {
@@ -34,9 +34,8 @@ function updtag(text, color, _id) {
     if (text.length > 50) if (debug) return console.log("Failed to update tag. Reason: text too long. _ID: " + _id);
     if (document.getElementById(`nametag-${_id}`) != null) {
         document.getElementById(`nametag-${_id}`).remove();
-        if (debug) console.log("Updating Tag. _ID: " + _id);
     } else if (debug) console.log("New tag. _ID: " + _id);
-    var tagDiv = document.createElement("div")
+    let tagDiv = document.createElement("div")
     tagDiv.className = "nametag";
     tagDiv.id = `nametag-${_id}`;
     tagDiv.style = `background-color:${color};`;
@@ -45,7 +44,7 @@ function updtag(text, color, _id) {
     document.getElementById(`namediv-${_id}`).title = "This is a MPPCT user.";
 }
 
-var sendTagLocked = false;
+let sendTagLocked = false;
 function sendTag() {
     if (sendTagLocked) {
         if (debug) return console.log("Called function sendTag(), but its locked");
@@ -94,7 +93,7 @@ MPP.client.on("ch", (p) => {
 });
 
 
-// Buttons  //////////////////////////////////////////////////////////////////////////
+// Buttons
 const a = document.createElement("input");
 a.name = "tag";
 a.type = "text";
@@ -130,7 +129,7 @@ $("#rename input[name=tag]").val(tag.text);
 $("#rename input[name=tagcolor]").val(tag.color);
 
 
-//Version checker ////////////////////////////////
+//Version checker
 setInterval(function() {
     fetch('https://raw.githubusercontent.com/Hyye123/MPPCT/main/version.json').then(r => r.json().then(json => {
         if (ver != json.latest) {
@@ -162,4 +161,4 @@ setInterval(function() {
             if (debug) console.log("Version of MPPCT checked. This version is the latest.");
         }
     }));
-}, 900000)
+}, 300000);
