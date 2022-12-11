@@ -1,14 +1,14 @@
-var tag = {text: "None", color: "#000000"};
+let tag = {text: "None", color: "#000000"};
 
 client.on('hi', () => {
+    client.sendArray([{m:"+custom"}]);
     if (!client.customSubscribed) {
-        client.sendArray([{m:"+custom"}]);
         client.customSubscribed = true;
     }
     sendTag();
 });
 
-var sendTagLocked = false;
+let sendTagLocked = false;
 function sendTag() {
     if (sendTagLocked) return;
     client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color}, target: { mode: 'subscribed' } }])
