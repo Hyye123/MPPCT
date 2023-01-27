@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
 // @match        *://www.multiplayerpiano.com/*
 // @match        *://multiplayerpiano.com/*
+// @match        *://better.mppclone.me/*
 // @license      MIT
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=mppclone.com
 // ==/UserScript==
@@ -16,12 +17,16 @@ console.log('Loaded MPPCT.')
 if (!localStorage.tag) {
     localStorage.tag = JSON.stringify({text: "Tag", color: "#000000"});
 }
+if (!localStorage.knownTags) {
+    localStorage.knownTags = '{}';
+}
 const debug = false;
-const ver = '1.3';
+const ver = '1.4';
 let tag = JSON.parse(localStorage.tag);
+let knownTags = JSON.parse(localStorage.knownTags);
 
 MPP.client.on('hi', () => {
-    MPP.client.sendArray([{m:"+custom"}]);
+    MPP.client.sendArray([{m: "+custom"}]);
     if (!MPP.client.customSubscribed) {
         MPP.client.customSubscribed = true;
     }
@@ -32,9 +37,12 @@ MPP.client.on('hi', () => {
 
 function updtag(text, color, _id) {
     if (text.length > 50) if (debug) return console.log("Failed to update tag. Reason: text too long. _ID: " + _id);
+    if (!document.getElementById(`namediv-${_id}`)) return;
     if (document.getElementById(`nametag-${_id}`) != null) {
         document.getElementById(`nametag-${_id}`).remove();
     } else if (debug) console.log("New tag. _ID: " + _id);
+    knownTags[_id] = {text: text, color: color};
+    localStorage.knownTags = JSON.stringify(knownTags);
     let tagDiv = document.createElement("div")
     tagDiv.className = "nametag";
     tagDiv.id = `nametag-${_id}`;
@@ -92,6 +100,35 @@ MPP.client.on("ch", (p) => {
     }, 1250);
 });
 
+// Tags in chat
+MPP.client.on("a", (msg) => {
+    if (!knownTags[msg.p._id]) return;
+    let aTag;
+    if (msg.p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
+    else aTag = knownTags[msg.p._id];
+
+    let span = `<span style="background-color: ${aTag.color};color:#ffffff;" class="nametag"></span>`;
+    let chatMessage = $('#chat ul li').last();
+    $(chatMessage).children('.name').before(span);
+    $(chatMessage).children()[2].innerText = aTag.text;
+});
+
+MPP.client.on("c", (msg) => {
+    if (!msg.c) return;
+    if (!Array.isArray(msg.c)) return;
+    msg.c.map((a, i) => {
+        if (!knownTags[msg.c[i].p._id]) return;
+        let aTag;
+        if (msg.c[i].p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
+        else aTag = knownTags[msg.c[i].p._id];
+
+        let span = `<span style="background-color: ${aTag.color};color:#ffffff;" class="nametag"></span>`;
+        let chatMessage = $(`#chat ul li`)[i];
+        $(chatMessage).children('.name').before(span);
+        $(chatMessage).children()[2].innerText = aTag.text;
+    });
+});
+
 
 // Buttons
 const a = document.createElement("input");
@@ -121,8 +158,9 @@ e.addEventListener("click", () => {
     if (debug) console.log("Updated own tag");
 });
 e.innerText = "SET TAG";
-e.className = "submittag";
+e.className = "top-button";
 e.style.position = "fixed";
+e.style.height = "30px";
 document.body.getElementsByClassName("dialog").rename.appendChild(e);
 
 $("#rename input[name=tag]").val(tag.text);
