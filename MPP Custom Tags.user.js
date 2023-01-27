@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -21,7 +21,7 @@ if (!localStorage.knownTags) {
     localStorage.knownTags = '{}';
 }
 const debug = false;
-const ver = '1.4';
+const ver = '1.5';
 let tag = JSON.parse(localStorage.tag);
 let knownTags = JSON.parse(localStorage.knownTags);
 
@@ -107,6 +107,14 @@ MPP.client.on("a", (msg) => {
     if (msg.p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
     else aTag = knownTags[msg.p._id];
 
+    if (document.getElementById(`nametext-${msg.p._id}`) != null) {
+        if (document.getElementById(`nametag-${msg.p._id}`) == null) {
+            delete knownTags[msg.p._id];
+            localStorage.knownTags = JSON.stringify(knownTags);
+            return;
+        }
+    }
+
     let span = `<span style="background-color: ${aTag.color};color:#ffffff;" class="nametag"></span>`;
     let chatMessage = $('#chat ul li').last();
     $(chatMessage).children('.name').before(span);
@@ -121,6 +129,14 @@ MPP.client.on("c", (msg) => {
         let aTag;
         if (msg.c[i].p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
         else aTag = knownTags[msg.c[i].p._id];
+
+        if (document.getElementById(`nametext-${msg.c[i].p._id}`) != null) {
+            if (document.getElementById(`nametag-${msg.c[i].p._id}`) == null) {
+                delete knownTags[msg.c[i].p._id];
+                localStorage.knownTags = JSON.stringify(knownTags);
+                return;
+            }
+        }
 
         let span = `<span style="background-color: ${aTag.color};color:#ffffff;" class="nametag"></span>`;
         let chatMessage = $(`#chat ul li`)[i];
