@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.7.5
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -21,7 +21,7 @@ window.addEventListener('load', () => {
         localStorage.knownTags = '{}';
     }
     const debug = false;
-    const ver = '1.7';
+    const ver = '1.7.5';
     let tag = JSON.parse(localStorage.tag);
     let knownTags = JSON.parse(localStorage.knownTags);
 
@@ -67,12 +67,15 @@ window.addEventListener('load', () => {
     }
 
     let sendTagLocked = false;
-    function sendTag() {
-        if (sendTagLocked) {
+    function sendTag(id) {
+        if (sendTagLocked && !id) {
             if (debug) return console.log('Called function sendTag(), but its locked');
             else return;
         };
-        MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "subscribed" } }]);
+        setTimeout(function() {
+            if (id) MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "id", id: id } }]);
+            else MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "subscribed" } }]);
+        }, 500);
         if (debug) console.log('Called function sendTag(), tag successfully sent');
         sendTagLocked = true;
         setTimeout(function() {
@@ -94,7 +97,7 @@ window.addEventListener('load', () => {
         }
         if (data.data.m == 'mppctreq') {
             if (MPP.client.ppl[data.p] != undefined) {
-                MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "id", id: data.p } }]);
+                sendTag(data.p);
                 if (debug) console.log('Received tags request and its succesfully confirmed. _ID: ' + data.p);
             } else if (debug) console.warn('Received tags request, but its failed to confirm. Reason: not found _id in ppl. Sender _ID: ' + data.p);
         }
