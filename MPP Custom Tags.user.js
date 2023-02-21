@@ -21,7 +21,7 @@ window.addEventListener('load', () => {
         localStorage.knownTags = '{}';
     }
     const Debug = false;
-    const ver = '1.7.5';
+    const ver = '1.7.8';
     let tag = JSON.parse(localStorage.tag),
         knownTags = JSON.parse(localStorage.knownTags);
 
