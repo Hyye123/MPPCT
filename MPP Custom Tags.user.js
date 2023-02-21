@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.7.5
+// @version      1.7.8
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -15,15 +15,15 @@
 window.addEventListener('load', () => {
     console.log('%cLoaded MPPCT! uwu','color:orange; font-size:15px;');
     if (!localStorage.tag) {
-        localStorage.tag = JSON.stringify({text: 'Tag', color: '#000000'});
+        localStorage.tag = JSON.stringify({text: 'None', color: '#000000'});
     }
     if (!localStorage.knownTags) {
         localStorage.knownTags = '{}';
     }
-    const debug = false;
+    const Debug = false;
     const ver = '1.7.5';
-    let tag = JSON.parse(localStorage.tag);
-    let knownTags = JSON.parse(localStorage.knownTags);
+    let tag = JSON.parse(localStorage.tag),
+        knownTags = JSON.parse(localStorage.knownTags);
 
     MPP.client.on('hi', () => {
         MPP.client.sendArray([{m: '+custom'}]);
@@ -31,16 +31,20 @@ window.addEventListener('load', () => {
 
     setTimeout(function() {
         updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id, tag.gradient);
+        askForTags();
     }, 1500);
 
     const allowedGradients = ['linear-gradient', 'radial-gradient', 'repeating-radial-gradient', 'conic-gradient', 'repeating-conic-gradient'];
 
     function updtag(text, color, _id, gradient) {
-        if (text.length > 50) if (debug) return console.log('Failed to update tag. Reason: text too long. _ID: ' + _id);
+        if (text.length > 50) {
+            if (Debug) console.log('Failed to update tag. Reason: text too long. _ID: ' + _id);
+            return;
+        }
         if (!document.getElementById(`namediv-${_id}`)) return;
         if (document.getElementById(`nametag-${_id}`) != null) {
             document.getElementById(`nametag-${_id}`).remove();
-        } else if (debug) console.log('New tag. _ID: ' + _id);
+        } else if (Debug) console.log('New tag. _ID: ' + _id);
         knownTags[_id] = {text: text, color: color};
         localStorage.knownTags = JSON.stringify(knownTags);
         let tagDiv = document.createElement('div')
@@ -48,10 +52,10 @@ window.addEventListener('load', () => {
         tagDiv.id = `nametag-${_id}`;
         tagDiv.style['background-color'] = color;
         if (gradient) {
-            if (!gradient.includes(':') && (gradient.split('(').length === 2 && gradient.split(')').length === 2)) {
+            if (!gradient.includes(';') && !gradient.includes(':') && (gradient.split('(').length === 2 && gradient.split(')').length === 2)) {
                 let gradientAllowed = false;
-                allowedGradients.forEach((v) => {
-                    if (gradient.startsWith(v)) {
+                allowedGradients.forEach((Gradient) => {
+                    if (gradient.startsWith(Gradient)) {
                         if (gradientAllowed) return;
                         else gradientAllowed = true;
                         tagDiv.style.background = gradient;
@@ -66,17 +70,18 @@ window.addEventListener('load', () => {
         document.getElementById(`namediv-${_id}`).title = 'This is an MPPCT user.';
     }
 
-    let sendTagLocked = false;
+
+    let sendTagLocked = false; // do NOT ask why i added it.
     function sendTag(id) {
         if (sendTagLocked && !id) {
-            if (debug) return console.log('Called function sendTag(), but its locked');
+            if (Debug) return console.log('Called function sendTag(), but its locked');
             else return;
         };
         setTimeout(function() {
             if (id) MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "id", id: id } }]);
             else MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "subscribed" } }]);
         }, 500);
-        if (debug) console.log('Called function sendTag(), tag successfully sent');
+        if (Debug) console.log('Called function sendTag(), tag successfully sent');
         sendTagLocked = true;
         setTimeout(function() {
             sendTagLocked = false;
@@ -91,29 +96,29 @@ window.addEventListener('load', () => {
             if (data.data.text && (data.data.color || data.data.gradient)) {
                 if (MPP.client.ppl[data.p]) {
                     updtag(data.data.text, data.data.color, data.p, data.gradient);
-                    if (debug) console.log(`Received tag and its successfully confirmed. _ID: ${data.p}, text: ${data.data.text}, color: ${data.data.color || 'None'}, gradient: ${data.data.gradient || 'None'}`);
-                } else if (debug) console.warn('Received tag, but its failed to confirm. Reason: not found _id in ppl');
-            } else if (debug) console.warn('Received tag, but its failed to confirm. Reason: missing data.text or data.color');
+                    if (Debug) console.log(`Received tag and its successfully confirmed. _ID: ${data.p}, text: ${data.data.text}, color: ${data.data.color || 'None'}, gradient: ${data.data.gradient || 'None'}`);
+                } else if (Debug) console.warn('Received tag, but its failed to confirm. Reason: not found _id in ppl');
+            } else if (Debug) console.warn('Received tag, but its failed to confirm. Reason: missing data.text or data.color');
         }
         if (data.data.m == 'mppctreq') {
             if (MPP.client.ppl[data.p] != undefined) {
                 sendTag(data.p);
-                if (debug) console.log('Received tags request and its succesfully confirmed. _ID: ' + data.p);
-            } else if (debug) console.warn('Received tags request, but its failed to confirm. Reason: not found _id in ppl. Sender _ID: ' + data.p);
+                if (Debug) console.log('Received tags request and its succesfully confirmed. _ID: ' + data.p);
+            } else if (Debug) console.warn('Received tags request, but its failed to confirm. Reason: not found _id in ppl. Sender _ID: ' + data.p);
         }
     });
     MPP.client.on('p', (p) => {
         if (p._id == MPP.client.getOwnParticipant()._id) {
             updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id, tag.gradient);
-            if (debug) console.log('Got own player update, tag updated');
+            if (Debug) console.log('Got own player update, tag updated');
             sendTag();
         }
     });
     MPP.client.on('ch', (p) => {
-        setTimeout(function() {
+        setTimeout(function() { //???
             askForTags();
             sendTag();
-            if (debug) console.log('Received ch event and sent tags request');
+            if (Debug) console.log('Received ch event and sent tags request');
         }, 1250);
     });
 
@@ -136,7 +141,7 @@ window.addEventListener('load', () => {
         if (chatMessage.innerText != msg.a) { //idk what is it
             if ($('.message').last().prevObject[$('.message').last().prevObject.length-2].innerText == msg.a) chatMessage = $('.message').last().prevObject[$('.message').last().prevObject.length-2]
             else if ($('.message').last().prevObject[$('.message').last().prevObject.length-1].innerText == msg.a) chatMessage = $('.message').last().prevObject[$('.message').last().prevObject.length-1]
-            else if (debug) return console.log('MPPCT: Unknown error with tags in chat.');
+            else if (Debug) return console.log('MPPCT: Unknown error with tags in chat.');
         }
         let Span = document.createElement('span'); // <span style="background-color: ${aTag.color};color:#ffffff;" class="nametag">${aTag.text}</span>
         Span.style['background-color'] = aTag.color;
@@ -208,7 +213,7 @@ window.addEventListener('load', () => {
         tag = newTag;
         updtag(newTag.text, newTag.color, MPP.client.getOwnParticipant()._id, newTag.gradient);
         sendTag()
-        if (debug) console.log('Updated own tag');
+        if (Debug) console.log('Updated own tag');
     });
     e.innerText = 'SET TAG';
     e.className = 'top-button';
@@ -249,7 +254,7 @@ window.addEventListener('load', () => {
                     });
                 }, 30000);
             } else {
-                if (debug) console.log('Version of MPPCT checked. This version is the latest.');
+                if (Debug) console.log('Version of MPPCT checked. This version is the latest.');
             }
         }));
     }, 300000);
