@@ -1,7 +1,9 @@
 let tag = {text: "None", color: "#000000"};
 
+//gradient example: tag.gradient = 'linear-gradient(red, blue)';
+
 client.on('hi', () => {
-    client.sendArray([{m:"+custom"}]);
+    client.sendArray([{m: "+custom"}]);
     if (!client.customSubscribed) {
         client.customSubscribed = true;
     }
@@ -11,7 +13,7 @@ client.on('hi', () => {
 let sendTagLocked = false;
 function sendTag() {
     if (sendTagLocked) return;
-    client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color}, target: { mode: 'subscribed' } }])
+    client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: 'subscribed' } }])
     sendTagLocked = true;
     setTimeout(function() {
         sendTagLocked = false;
@@ -21,7 +23,7 @@ function sendTag() {
 client.on("custom", (data) => {
     if (data.data.m == 'mppctreq') {
         if (client.ppl[data.p] != undefined) {
-            client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color}, target: { mode: 'id', id: data.p } }]);
+            client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color, tag.gradient}, target: { mode: 'id', id: data.p } }]);
         }
     }
 });
