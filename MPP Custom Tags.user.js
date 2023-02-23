@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.7.8
+// @version      1.7.9
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -21,12 +21,16 @@ window.addEventListener('load', () => {
         localStorage.knownTags = '{}';
     }
     const Debug = false;
-    const ver = '1.7.8';
+    const ver = '1.7.9';
     let tag = JSON.parse(localStorage.tag),
         knownTags = JSON.parse(localStorage.knownTags);
 
     MPP.client.on('hi', () => {
         MPP.client.sendArray([{m: '+custom'}]);
+        setTimeout(function() {
+            updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id, tag.gradient);
+            askForTags();
+        }, 1500);
     });
 
     setTimeout(function() {
@@ -65,7 +69,7 @@ window.addEventListener('load', () => {
                 });
             }
         }
-        tagDiv.innerText = text;
+        tagDiv.innerText = text; // xss fix
         document.getElementById(`namediv-${_id}`).prepend(tagDiv);
         document.getElementById(`namediv-${_id}`).title = 'This is an MPPCT user.';
     }
@@ -95,7 +99,7 @@ window.addEventListener('load', () => {
         if (data.data.m == 'mppct') {
             if (data.data.text && (data.data.color || data.data.gradient)) {
                 if (MPP.client.ppl[data.p]) {
-                    updtag(data.data.text, data.data.color, data.p, data.gradient);
+                    updtag(data.data.text, data.data.color, data.p, data.data.gradient);
                     if (Debug) console.log(`Received tag and its successfully confirmed. _ID: ${data.p}, text: ${data.data.text}, color: ${data.data.color || 'None'}, gradient: ${data.data.gradient || 'None'}`);
                 } else if (Debug) console.warn('Received tag, but its failed to confirm. Reason: not found _id in ppl');
             } else if (Debug) console.warn('Received tag, but its failed to confirm. Reason: missing data.text or data.color');
@@ -152,7 +156,7 @@ window.addEventListener('load', () => {
         chatMessage.appendChild(Span);
     });
 
-    MPP.client.on('c', (msg) => {
+    MPP.client.on('c', (msg) => { //not working???
         if (!msg.c) return;
         if (!Array.isArray(msg.c)) return;
         msg.c.map((a, i) => {
