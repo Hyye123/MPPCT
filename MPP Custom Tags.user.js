@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.8
+// @version      1.8.5
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ!#4440)
 // @match        *://mppclone.com/*
@@ -20,7 +20,7 @@ if (!localStorage.knownTags) {
     localStorage.knownTags = '{}';
 }
 const Debug = false;
-const ver = '1.8';
+const ver = '1.8.5';
 let tag = JSON.parse(localStorage.tag),
     knownTags = JSON.parse(localStorage.knownTags);
 
@@ -50,7 +50,7 @@ function updtag(text, color, _id, gradient) {
     tagDiv.id = `nametag-${_id}`;
     tagDiv.style['background-color'] = color;
     if (gradient) {
-        if (!gradient.includes(';') && !gradient.includes(':') && (gradient.split('(').length === 2 && gradient.split(')').length === 2)) {
+        if (!gradient.includes('"') && !gradient.includes(';') && !gradient.includes(':') && (gradient.split('(').length === 2 && gradient.split(')').length === 2)) {
             let gradientAllowed = false;
             allowedGradients.forEach((Gradient) => {
                 if (gradient.startsWith(Gradient)) {
@@ -113,6 +113,7 @@ MPP.client.on('p', (p) => {
     }
 });
 MPP.client.on('ch', (p) => {
+    if (!p.hasOwnProperty('p')) return;
     setTimeout(function() { //???
         askForTags();
         sendTag();
@@ -127,8 +128,8 @@ MPP.client.on('a', (msg) => {
     if (msg.p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
     else aTag = knownTags[msg.p._id];
 
-    if (document.getElementById(`nametext-${msg.p._id}`) != null) {
-        if (document.getElementById(`nametag-${msg.p._id}`) == null) {
+    if (document.getElementById(`nametext-${msg.p._id}`)) {
+        if (document.getElementById(`nametag-${msg.p._id}`) != knownTags[msg.p._id].text) {
             delete knownTags[msg.p._id];
             localStorage.knownTags = JSON.stringify(knownTags);
             return;
@@ -153,7 +154,7 @@ MPP.client.on('a', (msg) => {
 MPP.client.on('c', (msg) => { //idk maybe it is working now
     if (!msg.c) return;
     if (!Array.isArray(msg.c)) return;
-    msg.c.map((a, i) => {
+    msg.c.forEach((a, i) => {
         if (a.m == 'dm') return;
         let p = a.p;
         if (!knownTags[p._id]) return;
@@ -164,7 +165,7 @@ MPP.client.on('c', (msg) => { //idk maybe it is working now
         setTimeout(function() {
             if (document.getElementById(`nametext-${p._id}`)) { // xd
                 if (p._id != MPP.client.getOwnParticipant()._id) {
-                    if (!document.getElementById(`nametag-${p._id}`)) {
+                    if (document.getElementById(`nametag-${p._id}`) != knownTags[p._id].text) {
                         delete knownTags[p._id];
                         localStorage.knownTags = JSON.stringify(knownTags);
                         return;
@@ -212,7 +213,7 @@ e.addEventListener('click', () => {
     localStorage.tag = JSON.stringify(newTag);
     tag = newTag;
     updtag(newTag.text, newTag.color, MPP.client.getOwnParticipant()._id, newTag.gradient);
-    sendTag()
+    sendTag();
     if (Debug) console.log('Updated own tag');
 });
 e.innerText = 'SET TAG';
