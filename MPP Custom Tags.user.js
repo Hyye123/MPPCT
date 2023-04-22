@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.8.5
+// @version      1.8.6
 // @description  MPP Custom Tags (MPPCT)
-// @author       НУУЕ (!НУУЕ!#4440)
+// @author       НУУЕ (!НУУЕ2004#4440)
 // @match        *://mppclone.com/*
 // @match        *://www.multiplayerpiano.com/*
 // @match        *://multiplayerpiano.com/*
@@ -20,7 +20,7 @@ if (!localStorage.knownTags) {
     localStorage.knownTags = '{}';
 }
 const Debug = false;
-const ver = '1.8.5';
+const ver = '1.8.6';
 let tag = JSON.parse(localStorage.tag),
     knownTags = JSON.parse(localStorage.knownTags);
 
@@ -75,10 +75,8 @@ function sendTag(id) {
         if (Debug) return console.log('Called function sendTag(), but its locked');
         else return;
     };
-    setTimeout(function() {
-        if (id) MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "id", id: id } }]);
-        else MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "subscribed" } }]);
-    }, 500);
+    if (id) MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "id", id: id } }]);
+    else MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "subscribed" } }]);
     if (Debug) console.log('Called function sendTag(), tag successfully sent');
     sendTagLocked = true;
     setTimeout(function() {
@@ -93,7 +91,7 @@ MPP.client.on('custom', (data) => {
     if (data.data.m == 'mppct') {
         if (data.data.text && (data.data.color || data.data.gradient)) {
             if (MPP.client.ppl[data.p]) {
-                updtag(data.data.text, data.data.color, data.p, data.data.gradient);
+                updtag(data.data.text || 'None', data.data.color || '#000000', data.p, data.data.gradient);
                 if (Debug) console.log(`Received tag and its successfully confirmed. _ID: ${data.p}, text: ${data.data.text}, color: ${data.data.color || 'None'}, gradient: ${data.data.gradient || 'None'}`);
             } else if (Debug) console.warn('Received tag, but its failed to confirm. Reason: not found _id in ppl');
         } else if (Debug) console.warn('Received tag, but its failed to confirm. Reason: missing data.text or data.color');
@@ -114,11 +112,9 @@ MPP.client.on('p', (p) => {
 });
 MPP.client.on('ch', (p) => {
     if (!p.hasOwnProperty('p')) return;
-    setTimeout(function() { //???
-        askForTags();
-        sendTag();
-        if (Debug) console.log('Received ch event and sent tags request');
-    }, 1250);
+    askForTags();
+    sendTag();
+    if (Debug) console.log('Received ch event and sent tags request');
 });
 
 // Tags in chat
@@ -137,11 +133,6 @@ MPP.client.on('a', (msg) => {
     }
 
     let chatMessage = $('.message').last()[0];
-    if (chatMessage.innerText != msg.a) { //idk what is it
-        if ($('.message').last().prevObject[$('.message').last().prevObject.length-2].innerText == msg.a) chatMessage = $('.message').last().prevObject[$('.message').last().prevObject.length-2]
-        else if ($('.message').last().prevObject[$('.message').last().prevObject.length-1].innerText == msg.a) chatMessage = $('.message').last().prevObject[$('.message').last().prevObject.length-1]
-        else if (Debug) return console.log('MPPCT: Unknown error with tags in chat.');
-    }
     let Span = document.createElement('span'); // <span style="background-color: ${aTag.color};color:#ffffff;" class="nametag">${aTag.text}</span>
     Span.style['background-color'] = aTag.color;
     if (knownTags[msg.p._id]) Span.style.background = aTag.gradient;
@@ -165,14 +156,14 @@ MPP.client.on('c', (msg) => { //idk maybe it is working now
         setTimeout(function() {
             if (document.getElementById(`nametext-${p._id}`)) { // xd
                 if (p._id != MPP.client.getOwnParticipant()._id) {
-                    if (document.getElementById(`nametag-${p._id}`) != knownTags[p._id].text) {
+                    if (document.getElementById(`nametag-${p._id}`) != aTag.text) {
                         delete knownTags[p._id];
                         localStorage.knownTags = JSON.stringify(knownTags);
                         return;
                     }
                 }
             }
-        }, 2500);
+        }, 1500);
 
         let chatMessage = $('.message')[i];
         let Span = document.createElement('span'); // <span style="background-color: ${aTag.color};color:#ffffff;" class="nametag">${aTag.text}</span>
@@ -208,8 +199,8 @@ const e = document.createElement('button');
 e.addEventListener('click', () => {
     if ($('#rename input[name=tag]').val() == '') return;
     let newTag = JSON.parse(localStorage.tag);
-    newTag.text = $('#rename input[name=tag]').val();
-    newTag.color = $('#rename input[name=tagcolor]').val();
+    newTag.text = $('#rename input[name=tag]').val() || 'None';
+    newTag.color = $('#rename input[name=tagcolor]').val() || '#000000';
     localStorage.tag = JSON.stringify(newTag);
     tag = newTag;
     updtag(newTag.text, newTag.color, MPP.client.getOwnParticipant()._id, newTag.gradient);
@@ -227,14 +218,14 @@ $('#rename input[name=tagcolor]').val(tag.color);
 
 
 //Version checker
-setInterval(function() {
+function checkVersion() {
     fetch('https://raw.githubusercontent.com/Hyye123/MPPCT/main/version.json').then(r => r.json().then(json => {
         if (ver != json.latest) {
             setInterval(function() {
                 MPP.chat.receive({
                     "m": "a",
                     "t": Date.now(),
-                    "a": "Please update MPPCT via greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags) or github(https://github.com/Hyye123/MPPCT)",
+                    "a": "Please update MPPCT via greasy fork( https://greasyfork.org/ru/scripts/455137-mpp-custom-tags ) or github( https://github.com/Hyye123/MPPCT )",
                     "p": {
                         "_id": "MPPCT",
                         "name": "MPPCT (eng)",
@@ -245,7 +236,7 @@ setInterval(function() {
                 MPP.chat.receive({
                     "m": "a",
                     "t": Date.now(),
-                    "a": "Пожалуйста обновите MPPCT через greasy fork(https://greasyfork.org/ru/scripts/455137-mpp-custom-tags) или github(https://github.com/Hyye123/MPPCT)",
+                    "a": "Пожалуйста обновите MPPCT через greasy fork( https://greasyfork.org/ru/scripts/455137-mpp-custom-tags ) или github( https://github.com/Hyye123/MPPCT )",
                     "p": {
                         "_id": "MPPCT",
                         "name": "MPPCT (rus)",
@@ -258,4 +249,6 @@ setInterval(function() {
             if (Debug) console.log('Version of MPPCT checked. This version is the latest.');
         }
     }));
-}, 300000);
+}
+setInterval(checkVersion, 300000);
+setTimeout(checkVersion, 5000);
