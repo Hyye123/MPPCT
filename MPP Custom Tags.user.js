@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.8.6
+// @version      1.8.7
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ2004#4440)
 // @match        *://mppclone.com/*
@@ -20,7 +20,7 @@ if (!localStorage.knownTags) {
     localStorage.knownTags = '{}';
 }
 const Debug = false;
-const ver = '1.8.6';
+const ver = '1.8.7';
 let tag = JSON.parse(localStorage.tag),
     knownTags = JSON.parse(localStorage.knownTags);
 
@@ -125,7 +125,7 @@ MPP.client.on('a', (msg) => {
     else aTag = knownTags[msg.p._id];
 
     if (document.getElementById(`nametext-${msg.p._id}`)) {
-        if (document.getElementById(`nametag-${msg.p._id}`) != knownTags[msg.p._id].text) {
+        if (document.getElementById(`nametag-${msg.p._id}`).innerText != knownTags[msg.p._id].text) {
             delete knownTags[msg.p._id];
             localStorage.knownTags = JSON.stringify(knownTags);
             return;
@@ -156,14 +156,14 @@ MPP.client.on('c', (msg) => { //idk maybe it is working now
         setTimeout(function() {
             if (document.getElementById(`nametext-${p._id}`)) { // xd
                 if (p._id != MPP.client.getOwnParticipant()._id) {
-                    if (document.getElementById(`nametag-${p._id}`) != aTag.text) {
+                    if (document.getElementById(`nametag-${p._id}`).innerText != aTag.text) {
                         delete knownTags[p._id];
                         localStorage.knownTags = JSON.stringify(knownTags);
                         return;
                     }
                 }
             }
-        }, 1500);
+        }, 2000);
 
         let chatMessage = $('.message')[i];
         let Span = document.createElement('span'); // <span style="background-color: ${aTag.color};color:#ffffff;" class="nametag">${aTag.text}</span>
@@ -246,7 +246,7 @@ function checkVersion() {
                 });
             }, 30000);
         } else {
-            if (Debug) console.log('Version of MPPCT checked. This version is the latest.');
+            console.log('Version of MPPCT checked. This version is the latest.');
         }
     }));
 }
