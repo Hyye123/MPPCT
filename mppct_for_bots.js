@@ -17,13 +17,13 @@ function sendTag() {
     sendTagLocked = true;
     setTimeout(function() {
         sendTagLocked = false;
-    }, 750)
+    }, 250)
 }
 
 client.on("custom", (data) => {
     if (data.data.m == 'mppctreq') {
         if (client.ppl[data.p] != undefined) {
-            client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color, tag.gradient}, target: { mode: 'id', id: data.p } }]);
+            client.sendArray([{m: "custom", data: {m: 'mppct', text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: 'id', id: data.p } }]);
         }
     }
 });
