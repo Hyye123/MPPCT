@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.8.7
+// @version      1.8.8
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ2004#4440)
 // @match        *://mppclone.com/*
-// @match        *://www.multiplayerpiano.com/*
+// @match        *://www.multiplayerpiano.net/*
+// @match        *://www.multiplayerpiano.org/*
 // @match        *://multiplayerpiano.com/*
 // @match        *://better.mppclone.me/*
+// @match        *://mppclone.com/*
 // @license      MIT
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=mppclone.com
 // ==/UserScript==
