@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.8.8
+// @version      1.8.8.5
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ2004#4440)
 // @match        *://mppclone.com/*
-// @match        *://www.multiplayerpiano.net/*
+// @match        *://multiplayerpiano.net/*
 // @match        *://www.multiplayerpiano.org/*
 // @match        *://multiplayerpiano.com/*
 // @match        *://better.mppclone.me/*
@@ -13,7 +13,7 @@
 // @license      MIT
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=mppclone.com
 // ==/UserScript==
-
+ 
 console.log('%cLoaded MPPCT! uwu','color:orange; font-size:15px;');
 if (!localStorage.tag) {
     localStorage.tag = JSON.stringify({text: 'None', color: '#000000'});
@@ -25,7 +25,7 @@ const Debug = false;
 const ver = '1.8.7';
 let tag = JSON.parse(localStorage.tag),
     knownTags = JSON.parse(localStorage.knownTags);
-
+ 
 MPP.client.on('hi', () => {
     MPP.client.sendArray([{m: '+custom'}]);
     setTimeout(function() { //whyyyyyyyyyyyyyyyy
@@ -33,9 +33,9 @@ MPP.client.on('hi', () => {
         askForTags();
     }, 1500);
 });
-
+ 
 const allowedGradients = ['linear-gradient', 'radial-gradient', 'repeating-radial-gradient', 'conic-gradient', 'repeating-conic-gradient'];
-
+ 
 function updtag(text, color, _id, gradient) {
     if (text.length > 50) {
         if (Debug) console.log('Failed to update tag. Reason: text too long. _ID: ' + _id);
@@ -69,8 +69,8 @@ function updtag(text, color, _id, gradient) {
     document.getElementById(`namediv-${_id}`).prepend(tagDiv);
     document.getElementById(`namediv-${_id}`).title = 'This is an MPPCT user.';
 }
-
-
+ 
+ 
 let sendTagLocked = false; // do NOT ask why i added it.
 function sendTag(id) {
     if (sendTagLocked && !id) {
@@ -88,7 +88,7 @@ function sendTag(id) {
 function askForTags() {
     MPP.client.sendArray([{m: "custom", data: {m: "mppctreq"}, target: { mode: "subscribed" } }]);
 }
-
+ 
 MPP.client.on('custom', (data) => {
     if (data.data.m == 'mppct') {
         if (data.data.text && (data.data.color || data.data.gradient)) {
@@ -118,14 +118,14 @@ MPP.client.on('ch', (p) => {
     sendTag();
     if (Debug) console.log('Received ch event and sent tags request');
 });
-
+ 
 // Tags in chat
 MPP.client.on('a', (msg) => {
     if (!knownTags[msg.p._id]) return;
     let aTag;
     if (msg.p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
     else aTag = knownTags[msg.p._id];
-
+ 
     if (document.getElementById(`nametext-${msg.p._id}`)) {
         if (document.getElementById(`nametag-${msg.p._id}`).innerText != knownTags[msg.p._id].text) {
             delete knownTags[msg.p._id];
@@ -133,7 +133,7 @@ MPP.client.on('a', (msg) => {
             return;
         }
     }
-
+ 
     let chatMessage = $('.message').last()[0];
     let Span = document.createElement('span'); // <span style="background-color: ${aTag.color};color:#ffffff;" class="nametag">${aTag.text}</span>
     Span.style['background-color'] = aTag.color;
@@ -143,7 +143,7 @@ MPP.client.on('a', (msg) => {
     Span.innerText = aTag.text;
     chatMessage.appendChild(Span);
 });
-
+ 
 MPP.client.on('c', (msg) => { //idk maybe it is working now
     if (!msg.c) return;
     if (!Array.isArray(msg.c)) return;
@@ -154,7 +154,7 @@ MPP.client.on('c', (msg) => { //idk maybe it is working now
         let aTag;
         if (p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
         else aTag = knownTags[p._id];
-
+ 
         setTimeout(function() {
             if (document.getElementById(`nametext-${p._id}`)) { // xd
                 if (p._id != MPP.client.getOwnParticipant()._id) {
@@ -166,7 +166,7 @@ MPP.client.on('c', (msg) => { //idk maybe it is working now
                 }
             }
         }, 2000);
-
+ 
         let chatMessage = $('.message')[i];
         let Span = document.createElement('span'); // <span style="background-color: ${aTag.color};color:#ffffff;" class="nametag">${aTag.text}</span>
         Span.style['background-color'] = aTag.color;
@@ -177,8 +177,8 @@ MPP.client.on('c', (msg) => { //idk maybe it is working now
         chatMessage.appendChild(Span);
     });
 });
-
-
+ 
+ 
 // Buttons
 const a = document.createElement('input');
 a.name = 'tag';
@@ -188,7 +188,7 @@ a.maxLength = '50';
 a.className = 'text';
 a.style = 'width: 100px; height: 20px;';
 document.body.getElementsByClassName('dialog').rename.appendChild(a);
-
+ 
 const q = document.createElement('input');
 q.name = 'tagcolor';
 q.type = 'color';
@@ -196,7 +196,7 @@ q.placeholder = '';
 q.maxlength = '7';
 q.className = 'color';
 document.body.getElementsByClassName('dialog').rename.appendChild(q);
-
+ 
 const e = document.createElement('button');
 e.addEventListener('click', () => {
     if ($('#rename input[name=tag]').val() == '') return;
@@ -214,11 +214,11 @@ e.className = 'top-button';
 e.style.position = 'fixed';
 e.style.height = '30px';
 document.body.getElementsByClassName('dialog').rename.appendChild(e);
-
+ 
 $('#rename input[name=tag]').val(tag.text);
 $('#rename input[name=tagcolor]').val(tag.color);
-
-
+ 
+ 
 //Version checker
 function checkVersion() {
     fetch('https://raw.githubusercontent.com/Hyye123/MPPCT/main/version.json').then(r => r.json().then(json => {
