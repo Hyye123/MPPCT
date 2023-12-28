@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.9
+// @version      1.9.1
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (!НУУЕ2004#4440)
 // @match        *://multiplayerpiano.net/*
@@ -14,8 +14,8 @@
 console.log('%cLoaded MPPCT! uwu','color:orange; font-size:15px;');
 if (!localStorage.tag) localStorage.tag = JSON.stringify({text: 'None', color: '#000000'});
 
-const ver = '1.9';
-const tag = JSON.parse(localStorage.tag);
+const ver = '1.9.1';
+let tag = JSON.parse(localStorage.tag);
 
 MPP.client.on('hi', () => {
     MPP.client.sendArray([{m: '+custom'}]);
