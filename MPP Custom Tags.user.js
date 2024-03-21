@@ -1,92 +1,93 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.9.1
+// @version      1.9.2
 // @description  MPP Custom Tags (MPPCT)
-// @author       НУУЕ (!НУУЕ2004#4440)
+// @author       НУУЕ (discord - hyye.xyz)
 // @match        *://multiplayerpiano.net/*
 // @match        *://multiplayerpiano.org/*
-// @match        *://better.mppclone.me/*
+// @match        *://www.multiplayerpiano.org/*
 // @license      MIT
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=multiplayerpiano.net
 // ==/UserScript==
 
-console.log('%cLoaded MPPCT! uwu','color:orange; font-size:15px;');
-if (!localStorage.tag) localStorage.tag = JSON.stringify({text: 'None', color: '#000000'});
+/* globals MPP */
 
-const ver = '1.9.1';
-let tag = JSON.parse(localStorage.tag);
+console.log('%cLoaded MPPCT! uwu','color:orange; font-size:15px;');
+if (!localStorage.tag) localStorage.tag = JSON.stringify({ text: 'None', color: '#000000' });
+if (!localStorage.knownTags) localStorage.knownTags = JSON.stringify({});
+
+const ver = '1.9.2';
+const tag = JSON.parse(localStorage.tag);
+const knownTags = JSON.parse(localStorage.knownTags)
 
 MPP.client.on('hi', () => {
     MPP.client.sendArray([{m: '+custom'}]);
-    setTimeout(function() { //slow internet connection fix
-        updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id, tag.gradient);
-        askForTags();
-    }, 1500);
 });
 
-const allowedGradients = ['linear-gradient', 'radial-gradient', 'repeating-radial-gradient', 'conic-gradient', 'repeating-conic-gradient'];
+function gradientTest(gradient) {
+    if (!gradient) return false;
+
+    const gradients = ['linear-gradient', 'radial-gradient', 'repeating-radial-gradient', 'conic-gradient', 'repeating-conic-gradient'];
+
+    let gradientAllowed = false;
+
+    if (!gradient.includes('"') && !gradient.includes(';') && !gradient.includes(':')) {
+        gradients.forEach((Gradient) => {
+            if (gradient.startsWith(Gradient)) {
+                if (gradientAllowed) return;
+                else gradientAllowed = true;
+            }
+        });
+    }
+
+    return gradientAllowed;
+}
 
 function updtag(text, color, _id, gradient) {
-    if (text.length > 50) {
-        return;
-    }
-    if (!document.getElementById(`namediv-${_id}`)) return;
+    if (text.length > 50) return;
+    if (!MPP.client.ppl[_id]) return;
     if (document.getElementById(`nametag-${_id}`) != null) {
         document.getElementById(`nametag-${_id}`).remove();
     }
-    /*knownTags[_id] = {text: text, color: color};
-    localStorage.knownTags = JSON.stringify(knownTags);*/
+    knownTags[_id] = { text: text, color: color };
     let tagDiv = document.createElement('div')
     tagDiv.className = 'nametag';
     tagDiv.id = `nametag-${_id}`;
     tagDiv.style['background-color'] = color;
-    if (gradient) {
-        if (!gradient.includes('"') && !gradient.includes(';') && !gradient.includes(':')) {
-            let gradientAllowed = false;
-            allowedGradients.forEach((Gradient) => {
-                if (gradient.startsWith(Gradient)) {
-                    if (gradientAllowed) return;
-                    else gradientAllowed = true;
-                    tagDiv.style.background = gradient;
-                    /*knownTags[_id].gradient = gradient;
-                    localStorage.knownTags = JSON.stringify(knownTags);*/
-                }
-            });
-        }
+    if (gradientTest(gradient)) {
+        tagDiv.style.background = gradient;
+        knownTags[_id].gradient = gradient;
     }
+    localStorage.knownTags = JSON.stringify(knownTags);
     tagDiv.innerText = text;
     document.getElementById(`namediv-${_id}`).prepend(tagDiv);
     document.getElementById(`namediv-${_id}`).title = 'This is an MPPCT user.';
 }
 
 
-let sendTagLocked = false;//to prevent spam
 function sendTag(id) {
-    if (sendTagLocked && !id) return;
-    if (id) MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "id", id: id } }]);
-    else MPP.client.sendArray([{m: "custom", data: {m: "mppct", text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: "subscribed" } }]);
-    sendTagLocked = true;
-    setTimeout(function() {
-        sendTagLocked = false;
-    }, 750)
+    if (id) MPP.client.sendArray([{ m: 'custom', data: { m: 'mppct', text: tag.text, color: tag.color, gradient: tag.gradient }, target: { mode: 'id', id: id } }]);
+    else MPP.client.sendArray([{m: 'custom', data: {m: 'mppct', text: tag.text, color: tag.color, gradient: tag.gradient}, target: { mode: 'subscribed' } }]);
 }
 function askForTags() {
-    MPP.client.sendArray([{m: "custom", data: {m: "mppctreq"}, target: { mode: "subscribed" } }]);
+    MPP.client.sendArray([{ m: 'custom', data: { m: 'mppctreq' }, target: { mode: 'subscribed' } }]);
 }
 
-MPP.client.on('custom', (data) => {
-    if (data.data.m == 'mppct') {
-        if (data.data.text && (data.data.color || data.data.gradient)) {
-            if (MPP.client.ppl[data.p]) {
-                updtag(data.data.text || 'None', data.data.color || '#000000', data.p, data.data.gradient);
+MPP.client.on('custom', (c) => {
+    const tag = c.data;
+    if (tag.m == 'mppct') {
+        if (typeof tag.text == 'string' &&
+            (typeof tag.color == 'string' ||
+             tag.gradient == 'string')
+           ) {
+            if (MPP.client.ppl[c.p]) {
+                updtag(tag.text || 'None', tag.color || '#000000', c.p, tag.gradient);
             }
         }
     }
-    if (data.data.m == 'mppctreq') {
-        if (MPP.client.ppl[data.p] != undefined) {
-            sendTag(data.p);
-        }
+    if (tag.m == 'mppctreq') {
+        if (MPP.client.ppl[c.p]) sendTag(c.p);
     }
 });
 MPP.client.on('p', (p) => {
@@ -95,28 +96,21 @@ MPP.client.on('p', (p) => {
         sendTag();
     }
 });
-MPP.client.on('ch', (p) => {
-    if (!p.hasOwnProperty('p')) return;
+MPP.client.on('c', () => {
     askForTags();
     sendTag();
+    updtag(tag.text, tag.color, MPP.client.getOwnParticipant()._id, tag.gradient);
 });
 
 // Tags in chat
-/*MPP.client.on('a', (msg) => { //too many problems
+function addChatTag(msg) {
+    if (msg.m == 'dm') return;
     if (!knownTags[msg.p._id]) return;
     let aTag;
     if (msg.p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
     else aTag = knownTags[msg.p._id];
 
-    if (document.getElementById(`nametext-${msg.p._id}`)) {
-        if (document.getElementById(`nametag-${msg.p._id}`).innerText != knownTags[msg.p._id].text) {
-            delete knownTags[msg.p._id];
-            localStorage.knownTags = JSON.stringify(knownTags);
-            return;
-        }
-    }
-
-    let chatMessage = $('.message').last()[0];
+    let chatMessage = document.getElementById('msg-' + msg.id);
     let Span = document.createElement('span'); // <span style="background-color: ${aTag.color};color:#ffffff;" class="nametag">${aTag.text}</span>
     Span.style['background-color'] = aTag.color;
     if (knownTags[msg.p._id]) Span.style.background = aTag.gradient;
@@ -124,67 +118,50 @@ MPP.client.on('ch', (p) => {
     Span.className = 'nametag';
     Span.innerText = aTag.text;
     chatMessage.appendChild(Span);
+}
+
+MPP.client.on('a', (msg) => {
+    addChatTag(msg);
 });
 
 MPP.client.on('c', (msg) => {
-    if (!msg.c) return;
     if (!Array.isArray(msg.c)) return;
-    msg.c.forEach((a, i) => {
-        if (a.m == 'dm') return;
-        let p = a.p;
-        if (!knownTags[p._id]) return;
-        let aTag;
-        if (p._id == MPP.client.getOwnParticipant()._id) aTag = tag;
-        else aTag = knownTags[p._id];
-
-        setTimeout(function() {
-            if (document.getElementById(`nametext-${p._id}`)) { // xd
-                if (p._id != MPP.client.getOwnParticipant()._id) {
-                    if (document.getElementById(`nametag-${p._id}`).innerText != aTag.text) {
-                        delete knownTags[p._id];
-                        localStorage.knownTags = JSON.stringify(knownTags);
-                        return;
-                    }
-                }
-            }
-        }, 2000);
-
-        let chatMessage = $('.message')[i];
-        let Span = document.createElement('span'); // <span style="background-color: ${aTag.color};color:#ffffff;" class="nametag">${aTag.text}</span>
-        Span.style['background-color'] = aTag.color;
-        if (knownTags[p._id]) Span.style.background = aTag.gradient;
-        Span.style.color = '#ffffff';
-        Span.className = 'nametag';
-        Span.innerText = aTag.text;
-        chatMessage.appendChild(Span);
+    msg.c.forEach((msg) => {
+        addChatTag(msg);
     });
-});*/
+});
 
 
 // Buttons
+const container = document.body.getElementsByClassName('dialog').rename;
+
 const a = document.createElement('input');
-a.name = 'tag';
+a.id = 'tagtext';
+a.name = 'tagtext';
 a.type = 'text';
 a.placeholder = 'Tag';
 a.maxLength = '50';
 a.className = 'text';
 a.style = 'width: 100px; height: 20px;';
-document.body.getElementsByClassName('dialog').rename.appendChild(a);
+container.appendChild(a);
 
 const q = document.createElement('input');
+q.id = 'tagcolor';
 q.name = 'tagcolor';
 q.type = 'color';
 q.placeholder = '';
 q.maxlength = '7';
 q.className = 'color';
-document.body.getElementsByClassName('dialog').rename.appendChild(q);
+container.appendChild(q);
 
 const e = document.createElement('button');
 e.addEventListener('click', () => {
-    if ($('#rename input[name=tag]').val() == '') return;
+    let tagtext = document.getElementById('tagtext');
+    let tagcolor = document.getElementById('tagcolor');
+    if (tagtext.value == '') return;
     let newTag = JSON.parse(localStorage.tag);
-    newTag.text = $('#rename input[name=tag]').val() || 'None';
-    newTag.color = $('#rename input[name=tagcolor]').val() || '#000000';
+    newTag.text = tagtext.value || 'None';
+    newTag.color = tagcolor.value || '#000000';
     localStorage.tag = JSON.stringify(newTag);
     tag = newTag;
     updtag(newTag.text, newTag.color, MPP.client.getOwnParticipant()._id, newTag.gradient);
@@ -194,10 +171,10 @@ e.innerText = 'SET TAG';
 e.className = 'top-button';
 e.style.position = 'fixed';
 e.style.height = '30px';
-document.body.getElementsByClassName('dialog').rename.appendChild(e);
+container.appendChild(e);
 
-$('#rename input[name=tag]').val(tag.text);
-$('#rename input[name=tagcolor]').val(tag.color);
+document.getElementById('tagtext').value = tag.text;
+document.getElementById('tagcolor').value = tag.color;
 
 
 //Version checker
@@ -208,7 +185,7 @@ function checkVersion() {
                 MPP.chat.receive({
                     "m": "a",
                     "t": Date.now(),
-                    "a": "Please update MPPCT via greasy fork( https://greasyfork.org/ru/scripts/455137-mpp-custom-tags ) or github( https://github.com/Hyye123/MPPCT )",
+                    "a": "Please update MPPCT https://greasyfork.org/ru/scripts/455137-mpp-custom-tags",
                     "p": {
                         "_id": "MPPCT",
                         "name": "MPPCT (eng)",
@@ -219,7 +196,7 @@ function checkVersion() {
                 MPP.chat.receive({
                     "m": "a",
                     "t": Date.now(),
-                    "a": "Пожалуйста обновите MPPCT через greasy fork( https://greasyfork.org/ru/scripts/455137-mpp-custom-tags ) или github( https://github.com/Hyye123/MPPCT )",
+                    "a": "Пожалуйста обновите MPPCT https://greasyfork.org/ru/scripts/455137-mpp-custom-tags",
                     "p": {
                         "_id": "MPPCT",
                         "name": "MPPCT (rus)",
@@ -232,4 +209,4 @@ function checkVersion() {
     }));
 }
 setInterval(checkVersion, 300000);
-setTimeout(checkVersion, 5000);
+setTimeout(checkVersion, 10000);
