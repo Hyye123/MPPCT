@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.9.3
+// @version      1.9.4
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (discord - hyye.xyz)
 // @match        *://multiplayerpiano.net/*
@@ -17,7 +17,7 @@ console.log('%cLoaded MPPCT! uwu','color:orange; font-size:15px;');
 if (!localStorage.tag) localStorage.tag = JSON.stringify({ text: 'None', color: '#000000' });
 if (!localStorage.knownTags) localStorage.knownTags = JSON.stringify({});
 
-const ver = '1.9.3';
+const ver = '1.9.4';
 const knownTags = JSON.parse(localStorage.knownTags)
 
 let tag = JSON.parse(localStorage.tag);
@@ -33,14 +33,16 @@ function gradientTest(gradient) {
 
     let gradientAllowed = false;
 
-    if (!gradient.includes('"') && !gradient.includes(';') && !gradient.includes(':')) {
-        gradients.forEach((Gradient) => {
-            if (gradient.startsWith(Gradient)) {
+    if (!gradient.includes('"') && !gradient.includes('\'') && !gradient.includes(';') && !gradient.includes(':') && (gradient.split('(').length === 2) && (gradient.split(')').length === 2)) {
+        gradients.forEach((allowedGradient) => {
+            if (gradient.startsWith(allowedGradient + '(')) {
                 if (gradientAllowed) return;
                 else gradientAllowed = true;
             }
         });
     }
+
+    console.log(gradient, gradientAllowed);
 
     return gradientAllowed;
 }
@@ -197,7 +199,7 @@ function checkVersion() {
                 MPP.chat.receive({
                     "m": "a",
                     "t": Date.now(),
-                    "a": "Пожалуйста обновите MPPCT https://greasyfork.org/ru/scripts/455137-mpp-custom-tags",
+                    "a": "Пожалуйста, обновите MPPCT https://greasyfork.org/ru/scripts/455137-mpp-custom-tags",
                     "p": {
                         "_id": "MPPCT",
                         "name": "MPPCT (rus)",
