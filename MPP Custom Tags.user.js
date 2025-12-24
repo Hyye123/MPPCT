@@ -42,8 +42,6 @@ function gradientTest(gradient) {
         });
     }
 
-    console.log(gradient, gradientAllowed);
-
     return gradientAllowed;
 }
 
