@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.9.5
+// @version      1.9.6
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (discord - hyye.xyz)
 // @match        *://multiplayerpiano.net/*
@@ -17,7 +17,7 @@ console.log('%cLoaded MPPCT! uwu','color:orange; font-size:15px;');
 if (!localStorage.tag) localStorage.tag = JSON.stringify({ text: 'None', color: '#000000' });
 if (!localStorage.knownTags) localStorage.knownTags = JSON.stringify({});
 
-const ver = '1.9.5';
+const ver = '1.9.6';
 const knownTags = JSON.parse(localStorage.knownTags)
 
 let tag = JSON.parse(localStorage.tag);
@@ -27,7 +27,9 @@ MPP.client.on('hi', () => {
 });
 
 function gradientTest(gradient) {
-    if (!gradient) return false;
+    if (!gradient || typeof gradient != 'string') return false;
+
+    gradient = gradient.toLowerCase();
 
     const gradients = ['linear-gradient', 'repeating-linear-gradient', 'radial-gradient', 'repeating-radial-gradient', 'conic-gradient', 'repeating-conic-gradient'];
 
@@ -80,7 +82,7 @@ MPP.client.on('custom', (c) => {
     if (tag.m == 'mppct') {
         if (typeof tag.text == 'string' &&
             (typeof tag.color == 'string' ||
-             tag.gradient == 'string')
+             typeof tag.gradient == 'string')
            ) {
             if (MPP.client.ppl[c.p]) {
                 updtag(tag.text || 'None', tag.color || '#000000', c.p, tag.gradient);
