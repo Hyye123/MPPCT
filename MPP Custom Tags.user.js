@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MPP Custom Tags
 // @namespace    http://tampermonkey.net/
-// @version      1.9.4
+// @version      1.9.5
 // @description  MPP Custom Tags (MPPCT)
 // @author       НУУЕ (discord - hyye.xyz)
 // @match        *://multiplayerpiano.net/*
@@ -17,7 +17,7 @@ console.log('%cLoaded MPPCT! uwu','color:orange; font-size:15px;');
 if (!localStorage.tag) localStorage.tag = JSON.stringify({ text: 'None', color: '#000000' });
 if (!localStorage.knownTags) localStorage.knownTags = JSON.stringify({});
 
-const ver = '1.9.4';
+const ver = '1.9.5';
 const knownTags = JSON.parse(localStorage.knownTags)
 
 let tag = JSON.parse(localStorage.tag);
@@ -29,11 +29,11 @@ MPP.client.on('hi', () => {
 function gradientTest(gradient) {
     if (!gradient) return false;
 
-    const gradients = ['linear-gradient', 'radial-gradient', 'repeating-radial-gradient', 'conic-gradient', 'repeating-conic-gradient'];
+    const gradients = ['linear-gradient', 'repeating-linear-gradient', 'radial-gradient', 'repeating-radial-gradient', 'conic-gradient', 'repeating-conic-gradient'];
 
     let gradientAllowed = false;
 
-    if (!gradient.includes('"') && !gradient.includes('\'') && !gradient.includes(';') && !gradient.includes(':') && (gradient.split('(').length === 2) && (gradient.split(')').length === 2)) {
+    if (!gradient.includes('"') && !gradient.includes('\'') && !gradient.includes(';') && !gradient.includes(':') && !gradient.includes('url') && !gradient.includes('img') && !gradient.includes('image')) {
         gradients.forEach((allowedGradient) => {
             if (gradient.startsWith(allowedGradient + '(')) {
                 if (gradientAllowed) return;
